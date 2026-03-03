@@ -83,4 +83,4 @@ The extension has comprehensive tests covering:
 
 ## License
 
-MIT
+Apache 2.0
