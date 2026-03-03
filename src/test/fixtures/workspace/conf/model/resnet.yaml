@@ -8,5 +8,5 @@ optimizer:
   _target_: torch.optim.Adam
   lr: 0.001
   weight_decay: ${model.weight_decay_default}
-  
+
 weight_decay_default: 1e-4

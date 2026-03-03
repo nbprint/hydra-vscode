@@ -1,6 +1,6 @@
 # Hydra + OmegaConf for VS Code
 
-[![CI](https://github.com/hydra-community/hydra-vscode/actions/workflows/ci.yml/badge.svg)](https://github.com/hydra-community/hydra-vscode/actions/workflows/ci.yml)
+[![CI](https://github.com/nbprint/hydra-vscode/actions/workflows/ci.yml/badge.svg)](https://github.com/nbprint/hydra-vscode/actions/workflows/ci.yml)
 
 A VS Code extension providing rich language support for [Hydra](https://hydra.cc/) config files and [OmegaConf](https://omegaconf.readthedocs.io/) interpolation syntax.
 

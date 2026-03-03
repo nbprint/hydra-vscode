@@ -6,7 +6,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as fs from "fs";
 
-// We test the grammar structure directly since vscode-tmgrammar-test 
+// We test the grammar structure directly since vscode-tmgrammar-test
 // requires a full VS Code runtime. Instead, we validate the JSON schema
 // and pattern structure of the grammar file.
 
@@ -126,7 +126,7 @@ suite("TextMate Grammar", () => {
 
     // Should have general defaults entry pattern with modifiers
     const entryPattern = rule.patterns.find((p: any) =>
-      p.name?.includes("defaults-entry.hydra-yaml") && 
+      p.name?.includes("defaults-entry.hydra-yaml") &&
       !p.name.includes("self")
     );
     assert.ok(entryPattern, "Should have general defaults entry pattern");
