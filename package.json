@@ -3,7 +3,7 @@
   "displayName": "Hydra + OmegaConf for VS Code",
   "description": "YAML syntax highlighting, goto-definition, hover, and diagnostics for Hydra config composition and OmegaConf interpolation.",
   "version": "0.1.0",
-  "publisher": "hydra-community",
+  "publisher": "nbprint",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

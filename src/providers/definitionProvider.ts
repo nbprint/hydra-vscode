@@ -7,6 +7,7 @@
  * - Jumping to config groups from override-style entries.
  */
 import * as vscode from "vscode";
+import * as path from "path";
 import { HydraConfigIndexer } from "./configIndexer";
 
 export class HydraDefinitionProvider implements vscode.DefinitionProvider {
@@ -60,6 +61,7 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
       configPath = group;
     }
 
+    // 1. Try the indexer first
     const entry = this.indexer.findConfigFile(configPath);
     if (entry) {
       return new vscode.Location(entry.uri, new vscode.Position(0, 0));
@@ -69,6 +71,67 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
     const entries = this.indexer.findConfigs(group.replace(/^\//, ""), option);
     if (entries.length > 0) {
       return new vscode.Location(entries[0].uri, new vscode.Position(0, 0));
+    }
+
+    // 2. Fallback: search relative to the current file's config root.
+    //    Walk up from the document's directory to find a config root,
+    //    then look for configPath.yaml under it.
+    return this.resolveDefaultsRelativeToFile(document, configPath);
+  }
+
+  /**
+   * Fallback: find a config file by walking up from the current document's
+   * directory to find the config root, then resolving the path relative to it.
+   */
+  private resolveDefaultsRelativeToFile(
+    document: vscode.TextDocument,
+    configPath: string
+  ): vscode.Location | undefined {
+    const configRoot = this.findConfigRoot(document.uri.fsPath);
+    if (!configRoot) return undefined;
+
+    const normalized = configPath.replace(/^\//, "");
+    // Try .yaml and .yml extensions
+    for (const ext of [".yaml", ".yml"]) {
+      const candidate = path.join(configRoot, normalized + ext);
+      const candidateUri = vscode.Uri.file(candidate);
+      try {
+        // Use synchronous fs check since we can't await here
+        const fs = require("fs");
+        if (fs.existsSync(candidate)) {
+          return new vscode.Location(candidateUri, new vscode.Position(0, 0));
+        }
+      } catch {
+        // Ignore
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Walk up from a file path to find the nearest config root directory.
+   * Looks for directories named conf, config, or configs, or a directory
+   * that is itself a config root (contains subdirectories with YAML files).
+   */
+  private findConfigRoot(filePath: string): string | undefined {
+    const config = vscode.workspace.getConfiguration("hydra");
+    const searchPaths = new Set(
+      config.get<string[]>("configSearchPaths", ["conf", "config", "configs"])
+    );
+
+    let dir = path.dirname(filePath);
+    const visited = new Set<string>();
+
+    while (dir && !visited.has(dir)) {
+      visited.add(dir);
+      const dirName = path.basename(dir);
+      if (searchPaths.has(dirName)) {
+        return dir;
+      }
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
     }
 
     return undefined;

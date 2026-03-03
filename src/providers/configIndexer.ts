@@ -43,6 +43,8 @@ export class HydraConfigIndexer {
     ]);
 
     this.configRoots = [];
+
+    // 1. Look for configured search paths at workspace root
     for (const folder of workspaceFolders) {
       for (const sp of searchPaths) {
         const configDir = path.join(folder.uri.fsPath, sp);
@@ -57,12 +59,39 @@ export class HydraConfigIndexer {
       }
     }
 
-    // Also look for any directory containing a __init__.yaml or config.yaml
+    // 2. Auto-discover config roots: find directories named conf/config/configs
+    //    anywhere in the workspace (handles nested project structures)
+    const configDirNames = new Set(searchPaths);
     const yamlFiles = await vscode.workspace.findFiles(
       "**/*.{yaml,yml}",
-      "**/node_modules/**"
+      "{**/node_modules/**,**/out/**,**/.vscode-test/**}"
     );
 
+    const discoveredRoots = new Set<string>();
+    for (const fileUri of yamlFiles) {
+      // Walk up from each YAML file to find a parent dir matching search paths
+      let dir = path.dirname(fileUri.fsPath);
+      const visited = new Set<string>();
+      while (dir && !visited.has(dir)) {
+        visited.add(dir);
+        const dirName = path.basename(dir);
+        if (configDirNames.has(dirName)) {
+          discoveredRoots.add(dir);
+          break;
+        }
+        const parent = path.dirname(dir);
+        if (parent === dir) break;
+        dir = parent;
+      }
+    }
+
+    for (const root of discoveredRoots) {
+      if (!this.configRoots.includes(root)) {
+        this.configRoots.push(root);
+      }
+    }
+
+    // 3. Index all YAML files under each config root
     for (const root of this.configRoots) {
       const relativeFiles = yamlFiles.filter((f) =>
         f.fsPath.startsWith(root + path.sep)
