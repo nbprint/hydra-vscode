@@ -1,0 +1,10 @@
+# @package _global_
+defaults:
+  - db: mysql
+  - optional server: apache
+  - override db: postgresql
+  - /model/resnet@_here_
+  - db@backup: mysql
+  - _self_
+
+run_dir: ${hydra.runtime.output_dir}

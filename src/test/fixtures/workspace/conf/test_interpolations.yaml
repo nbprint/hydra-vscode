@@ -1,0 +1,14 @@
+env_value: ${oc.env:HOME}
+env_with_default: ${oc.env:MISSING_VAR,fallback}
+decoded: ${oc.decode:${encoded_str}}
+selected: ${oc.select:path.key,default_val}
+now_val: ${now:%Y-%m-%d}
+py_ver: ${python_version:minor}
+nested: ${${dynamic_key}}
+relative_ref: ${.sibling_key}
+parent_ref: ${..parent.key}
+escaped: \${not.interpolated}
+deep: ${a.b.c.d.e}
+unclosed: ${missing.close
+sibling_key: hello
+encoded_str: "[1,2,3]"

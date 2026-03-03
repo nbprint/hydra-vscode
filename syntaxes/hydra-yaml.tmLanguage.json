@@ -1,0 +1,351 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Hydra YAML",
+  "scopeName": "source.hydra-yaml",
+  "fileTypes": ["yaml", "yml"],
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#hydra-package-directive" },
+    { "include": "#document-separator" },
+    { "include": "#directives" },
+    { "include": "#node" }
+  ],
+  "repository": {
+    "comment": {
+      "match": "(?:^|\\s+)(#.*)$",
+      "captures": {
+        "1": { "name": "comment.line.number-sign.hydra-yaml" }
+      }
+    },
+    "hydra-package-directive": {
+      "name": "meta.directive.package.hydra-yaml",
+      "match": "^(#)\\s*(@package)\\s+(.*?)\\s*$",
+      "captures": {
+        "1": { "name": "comment.line.number-sign.hydra-yaml" },
+        "2": { "name": "keyword.control.directive.package.hydra-yaml" },
+        "3": {
+          "name": "entity.name.package.hydra-yaml",
+          "patterns": [
+            {
+              "name": "variable.language.package-keyword.hydra-yaml",
+              "match": "\\b(_global_|_group_|_name_|_here_)\\b"
+            }
+          ]
+        }
+      }
+    },
+    "document-separator": {
+      "match": "^(---|\\.\\.\\.)\\s*$",
+      "name": "punctuation.definition.document.hydra-yaml"
+    },
+    "directives": {
+      "match": "^(%)(YAML|TAG)\\s+(.*)",
+      "captures": {
+        "1": { "name": "punctuation.definition.directive.hydra-yaml" },
+        "2": { "name": "keyword.other.directive.hydra-yaml" },
+        "3": { "name": "string.unquoted.directive-value.hydra-yaml" }
+      }
+    },
+    "node": {
+      "patterns": [
+        { "include": "#defaults-block" },
+        { "include": "#hydra-special-key" },
+        { "include": "#key-value-pair" },
+        { "include": "#list-item" },
+        { "include": "#flow-collection" },
+        { "include": "#scalar" }
+      ]
+    },
+    "defaults-block": {
+      "begin": "^(defaults)(\\s*:\\s*)$",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.defaults.hydra-yaml" },
+        "2": { "name": "punctuation.separator.key-value.hydra-yaml" }
+      },
+      "end": "^(?=\\S(?!\\s*-))",
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#defaults-entry" }
+      ]
+    },
+    "defaults-entry": {
+      "patterns": [
+        {
+          "name": "meta.defaults-entry.self.hydra-yaml",
+          "match": "^\\s*(-\\s+)(_self_)\\s*$",
+          "captures": {
+            "1": { "name": "punctuation.definition.list.hydra-yaml" },
+            "2": { "name": "keyword.control.self.hydra-yaml" }
+          }
+        },
+        {
+          "name": "meta.defaults-entry.hydra-yaml",
+          "match": "^\\s*(-\\s+)(optional\\s+|override\\s+)?(/?[\\w/]+)(?:(@)([\\w_.]+))?(?:(:\\s*)(.+?))?\\s*$",
+          "captures": {
+            "1": { "name": "punctuation.definition.list.hydra-yaml" },
+            "2": { "name": "keyword.control.modifier.hydra-yaml" },
+            "3": { "name": "entity.name.config-group.hydra-yaml" },
+            "4": { "name": "keyword.operator.package-at.hydra-yaml" },
+            "5": {
+              "name": "entity.name.package-target.hydra-yaml",
+              "patterns": [
+                {
+                  "match": "\\b(_here_|_global_|_group_|_name_)\\b",
+                  "name": "variable.language.package-keyword.hydra-yaml"
+                }
+              ]
+            },
+            "6": { "name": "punctuation.separator.key-value.hydra-yaml" },
+            "7": {
+              "name": "string.unquoted.config-option.hydra-yaml",
+              "patterns": [
+                { "include": "#omegaconf-interpolation" },
+                {
+                  "match": "\\?\\?\\?",
+                  "name": "constant.language.missing.hydra-yaml"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "hydra-special-key": {
+      "patterns": [
+        {
+          "match": "^(\\s*)(_target_|_recursive_|_convert_|_partial_|_args_)(\\s*:\\s*)",
+          "captures": {
+            "2": { "name": "support.type.instantiate-key.hydra-yaml" },
+            "3": { "name": "punctuation.separator.key-value.hydra-yaml" }
+          }
+        }
+      ]
+    },
+    "key-value-pair": {
+      "patterns": [
+        {
+          "begin": "^(\\s*)((?:[\\w][\\w.-]*))(\\s*:\\s*)",
+          "beginCaptures": {
+            "2": { "name": "entity.name.tag.yaml.key.hydra-yaml" },
+            "3": { "name": "punctuation.separator.key-value.hydra-yaml" }
+          },
+          "end": "$",
+          "patterns": [
+            { "include": "#comment" },
+            { "include": "#value" }
+          ]
+        },
+        {
+          "begin": "^(\\s*)(\"[^\"]*\"|'[^']*')(\\s*:\\s*)",
+          "beginCaptures": {
+            "2": { "name": "string.quoted.key.hydra-yaml" },
+            "3": { "name": "punctuation.separator.key-value.hydra-yaml" }
+          },
+          "end": "$",
+          "patterns": [
+            { "include": "#comment" },
+            { "include": "#value" }
+          ]
+        }
+      ]
+    },
+    "list-item": {
+      "begin": "^(\\s*-\\s+)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.list.hydra-yaml" }
+      },
+      "end": "$",
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#key-value-pair-inline" },
+        { "include": "#value" }
+      ]
+    },
+    "key-value-pair-inline": {
+      "begin": "((?:[\\w][\\w.-]*))(\\s*:\\s+)",
+      "beginCaptures": {
+        "1": { "name": "entity.name.tag.yaml.key.hydra-yaml" },
+        "2": { "name": "punctuation.separator.key-value.hydra-yaml" }
+      },
+      "end": "$",
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#value" }
+      ]
+    },
+    "value": {
+      "patterns": [
+        { "include": "#omegaconf-interpolation" },
+        { "include": "#hydra-missing-value" },
+        { "include": "#flow-collection" },
+        { "include": "#quoted-string-double" },
+        { "include": "#quoted-string-single" },
+        { "include": "#constant" },
+        { "include": "#numeric" },
+        { "include": "#unquoted-string" }
+      ]
+    },
+    "omegaconf-interpolation": {
+      "patterns": [
+        {
+          "name": "meta.interpolation.escaped.hydra-yaml",
+          "match": "\\\\\\$\\{[^}]*\\}",
+          "captures": {
+            "0": { "name": "constant.character.escape.hydra-yaml" }
+          }
+        },
+        {
+          "name": "meta.interpolation.omegaconf.hydra-yaml",
+          "begin": "(\\$\\{)",
+          "beginCaptures": {
+            "1": { "name": "punctuation.definition.interpolation.begin.hydra-yaml" }
+          },
+          "end": "(\\})",
+          "endCaptures": {
+            "1": { "name": "punctuation.definition.interpolation.end.hydra-yaml" }
+          },
+          "patterns": [
+            { "include": "#interpolation-content" }
+          ]
+        }
+      ]
+    },
+    "interpolation-content": {
+      "patterns": [
+        { "include": "#omegaconf-interpolation" },
+        {
+          "name": "support.function.resolver.omegaconf.hydra-yaml",
+          "match": "\\b(oc\\.env|oc\\.decode|oc\\.create|oc\\.deprecated|oc\\.select|oc\\.dict\\.keys|oc\\.dict\\.values)\\b"
+        },
+        {
+          "name": "support.function.resolver.hydra.hydra-yaml",
+          "match": "\\b(now|hydra|python_version)\\b(?=\\s*:)"
+        },
+        {
+          "match": "([\\w]+(?:\\.[\\w]+)*)(?=\\s*:)",
+          "name": "support.function.resolver.custom.hydra-yaml"
+        },
+        {
+          "name": "punctuation.separator.resolver.hydra-yaml",
+          "match": ":"
+        },
+        {
+          "name": "punctuation.separator.comma.hydra-yaml",
+          "match": ","
+        },
+        {
+          "name": "variable.other.interpolation-path.hydra-yaml",
+          "match": "(?:\\.)*[\\w]+(?:\\.[\\w]+)*"
+        },
+        {
+          "name": "punctuation.accessor.dot.hydra-yaml",
+          "match": "\\."
+        }
+      ]
+    },
+    "hydra-missing-value": {
+      "match": "\\?\\?\\?",
+      "name": "constant.language.missing.hydra-yaml"
+    },
+    "flow-collection": {
+      "patterns": [
+        {
+          "name": "meta.flow-mapping.hydra-yaml",
+          "begin": "\\{",
+          "beginCaptures": { "0": { "name": "punctuation.definition.mapping.begin.hydra-yaml" } },
+          "end": "\\}",
+          "endCaptures": { "0": { "name": "punctuation.definition.mapping.end.hydra-yaml" } },
+          "patterns": [
+            { "include": "#flow-pair" },
+            { "include": "#value" },
+            { "match": ",", "name": "punctuation.separator.comma.hydra-yaml" }
+          ]
+        },
+        {
+          "name": "meta.flow-sequence.hydra-yaml",
+          "begin": "\\[",
+          "beginCaptures": { "0": { "name": "punctuation.definition.sequence.begin.hydra-yaml" } },
+          "end": "\\]",
+          "endCaptures": { "0": { "name": "punctuation.definition.sequence.end.hydra-yaml" } },
+          "patterns": [
+            { "include": "#value" },
+            { "match": ",", "name": "punctuation.separator.comma.hydra-yaml" }
+          ]
+        }
+      ]
+    },
+    "flow-pair": {
+      "match": "([\\w][\\w.-]*)\\s*(:)\\s*",
+      "captures": {
+        "1": { "name": "entity.name.tag.yaml.key.hydra-yaml" },
+        "2": { "name": "punctuation.separator.key-value.hydra-yaml" }
+      }
+    },
+    "quoted-string-double": {
+      "name": "string.quoted.double.hydra-yaml",
+      "begin": "\"",
+      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.hydra-yaml" } },
+      "end": "\"",
+      "endCaptures": { "0": { "name": "punctuation.definition.string.end.hydra-yaml" } },
+      "patterns": [
+        { "include": "#omegaconf-interpolation" },
+        { "match": "\\\\.", "name": "constant.character.escape.hydra-yaml" }
+      ]
+    },
+    "quoted-string-single": {
+      "name": "string.quoted.single.hydra-yaml",
+      "begin": "'",
+      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.hydra-yaml" } },
+      "end": "'",
+      "endCaptures": { "0": { "name": "punctuation.definition.string.end.hydra-yaml" } },
+      "patterns": [
+        { "match": "''", "name": "constant.character.escape.hydra-yaml" }
+      ]
+    },
+    "constant": {
+      "patterns": [
+        {
+          "match": "\\b(true|True|TRUE|false|False|FALSE)\\b",
+          "name": "constant.language.boolean.hydra-yaml"
+        },
+        {
+          "match": "\\b(null|Null|NULL|~)\\b",
+          "name": "constant.language.null.hydra-yaml"
+        }
+      ]
+    },
+    "numeric": {
+      "patterns": [
+        {
+          "match": "\\b[+-]?[0-9][0-9_]*\\b",
+          "name": "constant.numeric.integer.hydra-yaml"
+        },
+        {
+          "match": "\\b[+-]?[0-9][0-9_]*(\\.[0-9_]+)?([eE][+-]?[0-9]+)?\\b",
+          "name": "constant.numeric.float.hydra-yaml"
+        },
+        {
+          "match": "\\b[+-]?(\\.[iI][nN][fF]|[iI][nN][fF])\\b",
+          "name": "constant.numeric.inf.hydra-yaml"
+        },
+        {
+          "match": "\\b[+-]?\\.?[nN][aA][nN]\\b",
+          "name": "constant.numeric.nan.hydra-yaml"
+        }
+      ]
+    },
+    "unquoted-string": {
+      "patterns": [
+        {
+          "match": "[^\\s#{}\\[\\],]+",
+          "name": "string.unquoted.hydra-yaml"
+        }
+      ]
+    },
+    "scalar": {
+      "patterns": [
+        { "include": "#value" }
+      ]
+    }
+  }
+}

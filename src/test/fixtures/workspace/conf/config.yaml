@@ -1,0 +1,10 @@
+# @package _global_
+defaults:
+  - db: mysql
+  - server: apache
+  - _self_
+
+app_name: my_app
+debug: false
+
+output_dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}

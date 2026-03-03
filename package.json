@@ -1,0 +1,109 @@
+{
+  "name": "hydra-vscode",
+  "displayName": "Hydra + OmegaConf for VS Code",
+  "description": "YAML syntax highlighting, goto-definition, hover, and diagnostics for Hydra config composition and OmegaConf interpolation.",
+  "version": "0.1.0",
+  "publisher": "hydra-community",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hydra-community/hydra-vscode"
+  },
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Other"
+  ],
+  "keywords": [
+    "hydra",
+    "omegaconf",
+    "yaml",
+    "config",
+    "interpolation"
+  ],
+  "activationEvents": [
+    "onLanguage:yaml",
+    "onLanguage:hydra-yaml",
+    "workspaceContains:**/*.yaml"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "hydra-yaml",
+        "aliases": [
+          "Hydra YAML",
+          "hydra-yaml"
+        ],
+        "extensions": [
+          ".yaml",
+          ".yml"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "hydra-yaml",
+        "scopeName": "source.hydra-yaml",
+        "path": "./syntaxes/hydra-yaml.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "title": "Hydra + OmegaConf",
+      "properties": {
+        "hydra.configSearchPaths": {
+          "type": "array",
+          "default": [
+            "conf",
+            "config",
+            "configs"
+          ],
+          "description": "Directories to search for Hydra config files (relative to workspace root)."
+        },
+        "hydra.enableDiagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable lint diagnostics for OmegaConf interpolation errors."
+        },
+        "hydra.enableHover": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable hover information for OmegaConf interpolations."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js",
+    "test:unit": "mocha --require ts-node/register 'src/test/unit/**/*.test.ts'",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.75.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vscode/test-electron": "^2.3.8",
+    "@vscode/vsce": "^2.22.0",
+    "eslint": "^8.56.0",
+    "glob": "^10.3.10",
+    "mocha": "^10.2.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "vscode-tmgrammar-test": "^0.1.3"
+  },
+  "dependencies": {
+    "yaml": "^2.3.4"
+  }
+}

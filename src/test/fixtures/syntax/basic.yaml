@@ -1,0 +1,64 @@
+# SYNTAX TEST "source.hydra-yaml" "Hydra YAML Syntax Highlighting Tests"
+
+# @package _global_
+#^^^^^^^^^^^^^^^^^^  meta.directive.package.hydra-yaml
+#          ^^^^^^^^  variable.language.package-keyword.hydra-yaml
+
+defaults:
+# <--- keyword.control.defaults.hydra-yaml
+  - db: mysql
+#^^^           punctuation.definition.list.hydra-yaml
+#   ^^         entity.name.config-group.hydra-yaml
+#       ^^^^^  string.unquoted.config-option.hydra-yaml
+  - _self_
+#   ^^^^^^  keyword.control.self.hydra-yaml
+  - optional server: apache
+#   ^^^^^^^^               keyword.control.modifier.hydra-yaml
+  - override db: postgresql
+#   ^^^^^^^^               keyword.control.modifier.hydra-yaml
+
+_target_: my_app.Trainer
+# <--- support.type.instantiate-key.hydra-yaml
+_recursive_: true
+# <--- support.type.instantiate-key.hydra-yaml
+_convert_: none
+# <--- support.type.instantiate-key.hydra-yaml
+_partial_: false
+# <--- support.type.instantiate-key.hydra-yaml
+
+host: localhost
+#^^^           entity.name.tag.yaml.key.hydra-yaml
+port: 3306
+# ^^^       constant.numeric.integer.hydra-yaml
+debug: true
+#      ^^^^  constant.language.boolean.hydra-yaml
+value: null
+#      ^^^^  constant.language.null.hydra-yaml
+password: ???
+#         ^^^  constant.language.missing.hydra-yaml
+
+simple_ref: ${foo.bar}
+#           ^^          punctuation.definition.interpolation.begin.hydra-yaml
+#                    ^  punctuation.definition.interpolation.end.hydra-yaml
+resolver_ref: ${oc.env:HOME}
+#               ^^^^^^        support.function.resolver.omegaconf.hydra-yaml
+hydra_resolver: ${now:%Y-%m-%d}
+#                 ^^^            support.function.resolver.hydra.hydra-yaml
+escaped: \${not.interpolated}
+#        ^^^^^^^^^^^^^^^^^^^^  constant.character.escape.hydra-yaml
+
+quoted: "string with ${interp}"
+#       ^                       punctuation.definition.string.begin.hydra-yaml
+#                            ^  punctuation.definition.string.end.hydra-yaml
+single_quoted: 'no interpolation'
+#              ^                   punctuation.definition.string.begin.hydra-yaml
+
+flow_map: {a: 1, b: 2}
+#         ^              punctuation.definition.mapping.begin.hydra-yaml
+#                     ^  punctuation.definition.mapping.end.hydra-yaml
+flow_seq: [1, 2, 3]
+#         ^           punctuation.definition.sequence.begin.hydra-yaml
+#                  ^  punctuation.definition.sequence.end.hydra-yaml
+
+# This is a regular comment
+#^^^^^^^^^^^^^^^^^^^^^^^^^^  comment.line.number-sign.hydra-yaml

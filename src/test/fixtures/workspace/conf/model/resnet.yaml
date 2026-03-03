@@ -1,0 +1,12 @@
+_target_: my_app.models.ResNet
+_recursive_: true
+_convert_: none
+num_layers: 50
+pretrained: true
+
+optimizer:
+  _target_: torch.optim.Adam
+  lr: 0.001
+  weight_decay: ${model.weight_decay_default}
+  
+weight_decay_default: 1e-4
