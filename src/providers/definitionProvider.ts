@@ -9,6 +9,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { HydraConfigIndexer } from "./configIndexer";
+import * as fs from "fs";
 
 export class HydraDefinitionProvider implements vscode.DefinitionProvider {
   constructor(private indexer: HydraConfigIndexer) {}
@@ -97,7 +98,6 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
       const candidateUri = vscode.Uri.file(candidate);
       try {
         // Use synchronous fs check since we can't await here
-        const fs = require("fs");
         if (fs.existsSync(candidate)) {
           return new vscode.Location(candidateUri, new vscode.Position(0, 0));
         }

@@ -1,5 +1,6 @@
 # @package _global_
 defaults:
+  - base@_here_
   - db: mysql
   - server: apache
   - _self_
