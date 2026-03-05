@@ -7,7 +7,8 @@
  */
 import * as vscode from "vscode";
 import * as path from "path";
-import { flattenYaml, YamlFlatMap } from "../parser/yamlParser";
+import * as fs from "fs";
+import { flattenYaml, YamlFlatMap, parseSearchPaths, SearchPathEntry } from "../parser/yamlParser";
 
 export interface ConfigEntry {
   /** Config group path, e.g. "db" or "server/apache" */
@@ -114,6 +115,149 @@ export class HydraConfigIndexer {
         });
       }
     }
+
+    // 4. Parse hydra.searchpath from all indexed YAML files and add
+    //    those directories as additional config roots
+    await this.indexSearchPaths(yamlFiles);
+  }
+
+  /**
+   * Parse `hydra.searchpath` from all YAML files and index any additional
+   * config directories they reference.
+   *
+   * Supported schemes:
+   *   - `file://relative/path` — resolved relative to the workspace folder
+   *     containing the YAML file
+   *   - `pkg://package_name`  — resolved by searching for a directory with
+   *     that name anywhere in the workspace
+   */
+  private async indexSearchPaths(yamlFiles: vscode.Uri[]): Promise<void> {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders) return;
+
+    const additionalRoots = new Set<string>();
+
+    for (const fileUri of yamlFiles) {
+      try {
+        const content = await vscode.workspace.fs.readFile(fileUri);
+        const text = Buffer.from(content).toString("utf-8");
+        const searchPaths = parseSearchPaths(text);
+
+        for (const sp of searchPaths) {
+          const resolved = this.resolveSearchPathEntry(
+            sp,
+            fileUri.fsPath,
+            workspaceFolders
+          );
+          for (const dir of resolved) {
+            if (!this.configRoots.includes(dir) && !additionalRoots.has(dir)) {
+              additionalRoots.add(dir);
+            }
+          }
+        }
+      } catch {
+        // Ignore read errors
+      }
+    }
+
+    if (additionalRoots.size === 0) return;
+
+    // Index YAML files under all newly discovered searchpath roots
+    for (const root of additionalRoots) {
+      this.configRoots.push(root);
+
+      const pattern = new vscode.RelativePattern(
+        vscode.Uri.file(root),
+        "**/*.{yaml,yml}"
+      );
+      const files = await vscode.workspace.findFiles(pattern);
+
+      for (const fileUri of files) {
+        const relativePath = path.relative(root, fileUri.fsPath);
+        const parsed = path.parse(relativePath);
+        const dirPart = parsed.dir;
+        const namePart = parsed.name;
+        const group = dirPart || "";
+
+        this.entries.push({
+          group: group.replace(/\\/g, "/"),
+          option: namePart,
+          filePath: fileUri.fsPath,
+          uri: fileUri,
+        });
+      }
+    }
+  }
+
+  /**
+   * Resolve a single search path entry to zero or more absolute directory paths.
+   */
+  private resolveSearchPathEntry(
+    entry: SearchPathEntry,
+    sourceFilePath: string,
+    workspaceFolders: readonly vscode.WorkspaceFolder[]
+  ): string[] {
+    const results: string[] = [];
+
+    if (entry.scheme === "file") {
+      // file:// paths are relative to the workspace folder containing the source
+      const folder = vscode.workspace.getWorkspaceFolder(
+        vscode.Uri.file(sourceFilePath)
+      );
+      if (folder) {
+        const candidate = path.resolve(folder.uri.fsPath, entry.path);
+        if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+          results.push(candidate);
+        }
+      }
+      // Walk up from source file's directory, trying to resolve at each level.
+      // This handles the common case where file://examples/hydra is relative to
+      // the project root (pyproject.toml location) which may differ from the
+      // VS Code workspace root.
+      let fileDir = path.dirname(sourceFilePath);
+      const fileVisited = new Set<string>();
+      while (fileDir && !fileVisited.has(fileDir)) {
+        fileVisited.add(fileDir);
+        const candidate = path.resolve(fileDir, entry.path);
+        if (
+          fs.existsSync(candidate) &&
+          fs.statSync(candidate).isDirectory() &&
+          !results.includes(candidate)
+        ) {
+          results.push(candidate);
+        }
+        const parent = path.dirname(fileDir);
+        if (parent === fileDir) break;
+        fileDir = parent;
+      }
+    } else if (entry.scheme === "pkg") {
+      // pkg:// paths — search for a directory with this name in the workspace
+      for (const folder of workspaceFolders) {
+        const candidate = path.join(folder.uri.fsPath, entry.path);
+        if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+          results.push(candidate);
+        }
+      }
+      // Also search relative to source file's parent directories
+      let dir = path.dirname(sourceFilePath);
+      const visited = new Set<string>();
+      while (dir && !visited.has(dir)) {
+        visited.add(dir);
+        const candidate = path.join(dir, entry.path);
+        if (
+          fs.existsSync(candidate) &&
+          fs.statSync(candidate).isDirectory() &&
+          !results.includes(candidate)
+        ) {
+          results.push(candidate);
+        }
+        const parent = path.dirname(dir);
+        if (parent === dir) break;
+        dir = parent;
+      }
+    }
+
+    return results;
   }
 
   /**

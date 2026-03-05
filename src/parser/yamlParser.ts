@@ -172,3 +172,64 @@ export function resolvePathInFlatMap(
   }
   return { value: undefined, found: false };
 }
+
+/**
+ * Parse `hydra.searchpath` entries from a YAML document.
+ *
+ * Hydra searchpath entries look like:
+ *   hydra:
+ *     searchpath:
+ *       - file://path/to/dir
+ *       - pkg://package_name
+ *
+ * Returns an array of SearchPathEntry objects with the scheme and path.
+ */
+export interface SearchPathEntry {
+  /** "file" or "pkg" */
+  scheme: string;
+  /** The path portion after the :// */
+  path: string;
+  /** The raw string value */
+  raw: string;
+}
+
+export function parseSearchPaths(text: string): SearchPathEntry[] {
+  const entries: SearchPathEntry[] = [];
+
+  try {
+    const doc = YAML.parseDocument(text);
+    if (!doc.contents || !YAML.isMap(doc.contents)) return entries;
+
+    // Look for hydra.searchpath
+    for (const item of doc.contents.items) {
+      const key = YAML.isScalar(item.key) ? String(item.key.value) : "";
+      if (key !== "hydra") continue;
+
+      if (!YAML.isMap(item.value)) continue;
+      for (const hydraItem of item.value.items) {
+        const hKey = YAML.isScalar(hydraItem.key)
+          ? String(hydraItem.key.value)
+          : "";
+        if (hKey !== "searchpath") continue;
+
+        if (!YAML.isSeq(hydraItem.value)) continue;
+        for (const spItem of hydraItem.value.items) {
+          if (!YAML.isScalar(spItem)) continue;
+          const raw = String(spItem.value);
+          const match = raw.match(/^(\w+):\/\/(.+)$/);
+          if (match && (match[1] === "file" || match[1] === "pkg")) {
+            entries.push({
+              scheme: match[1],
+              path: match[2],
+              raw,
+            });
+          }
+        }
+      }
+    }
+  } catch {
+    // Ignore parse errors
+  }
+
+  return entries;
+}

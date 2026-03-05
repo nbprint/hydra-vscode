@@ -3,9 +3,15 @@ defaults:
   - base@_here_
   - db: mysql
   - server: apache
+  - additional: other_conf
+
   - _self_
 
 app_name: my_app
 debug: false
 
 output_dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+hydra:
+  searchpath:
+    - pkg://additional_conf

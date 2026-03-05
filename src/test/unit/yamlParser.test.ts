@@ -7,6 +7,7 @@ import {
   parseLineKeyValue,
   getKeyPathAtLine,
   parseDefaultsList,
+  parseSearchPaths,
 } from "../../parser/yamlParser";
 
 suite("YamlParser", () => {
@@ -256,6 +257,63 @@ suite("YamlParser", () => {
       const entries = parseDefaultsList(yaml);
       assert.strictEqual(entries.length, 1);
       assert.strictEqual(entries[0].packageTarget, "_here_");
+    });
+  });
+
+  suite("parseSearchPaths", () => {
+    test("should parse file:// searchpath entries", () => {
+      const yaml =
+        "hydra:\n  searchpath:\n    - file://examples/hydra";
+      const result = parseSearchPaths(yaml);
+      assert.strictEqual(result.length, 1);
+      assert.strictEqual(result[0].scheme, "file");
+      assert.strictEqual(result[0].path, "examples/hydra");
+    });
+
+    test("should parse pkg:// searchpath entries", () => {
+      const yaml =
+        "hydra:\n  searchpath:\n    - pkg://additional_conf";
+      const result = parseSearchPaths(yaml);
+      assert.strictEqual(result.length, 1);
+      assert.strictEqual(result[0].scheme, "pkg");
+      assert.strictEqual(result[0].path, "additional_conf");
+    });
+
+    test("should parse multiple searchpath entries", () => {
+      const yaml =
+        "hydra:\n  searchpath:\n    - file://path/one\n    - pkg://mypkg\n    - file://path/two";
+      const result = parseSearchPaths(yaml);
+      assert.strictEqual(result.length, 3);
+      assert.strictEqual(result[0].scheme, "file");
+      assert.strictEqual(result[0].path, "path/one");
+      assert.strictEqual(result[1].scheme, "pkg");
+      assert.strictEqual(result[1].path, "mypkg");
+      assert.strictEqual(result[2].scheme, "file");
+      assert.strictEqual(result[2].path, "path/two");
+    });
+
+    test("should return empty array when no searchpath", () => {
+      const yaml = "db:\n  host: localhost\n  port: 3306";
+      const result = parseSearchPaths(yaml);
+      assert.strictEqual(result.length, 0);
+    });
+
+    test("should handle flow-style list", () => {
+      const yaml =
+        "hydra:\n  searchpath: [file://examples/hydra]";
+      const result = parseSearchPaths(yaml);
+      assert.strictEqual(result.length, 1);
+      assert.strictEqual(result[0].scheme, "file");
+      assert.strictEqual(result[0].path, "examples/hydra");
+    });
+
+    test("should ignore entries without recognized scheme", () => {
+      const yaml =
+        "hydra:\n  searchpath:\n    - http://example.com\n    - file://valid/path";
+      const result = parseSearchPaths(yaml);
+      assert.strictEqual(result.length, 1);
+      assert.strictEqual(result[0].scheme, "file");
+      assert.strictEqual(result[0].path, "valid/path");
     });
   });
 });

@@ -9,6 +9,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { HydraConfigIndexer } from "./configIndexer";
+import { parseSearchPaths } from "../parser/yamlParser";
 import * as fs from "fs";
 
 export class HydraDefinitionProvider implements vscode.DefinitionProvider {
@@ -77,7 +78,11 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
     // 2. Fallback: search relative to the current file's config root.
     //    Walk up from the document's directory to find a config root,
     //    then look for configPath.yaml under it.
-    return this.resolveDefaultsRelativeToFile(document, configPath);
+    const relativeDef = this.resolveDefaultsRelativeToFile(document, configPath);
+    if (relativeDef) return relativeDef;
+
+    // 3. Search in hydra.searchpath directories declared in this document
+    return this.resolveDefaultsViaSearchPath(document, configPath);
   }
 
   /**
@@ -135,6 +140,121 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
     }
 
     return undefined;
+  }
+
+  /**
+   * Parse `hydra.searchpath` from the current document and look for the
+   * config file under each resolved searchpath directory.
+   *
+   * Supports `file://` (relative to workspace folder) and `pkg://` (search
+   * the workspace for a matching directory name).
+   */
+  private resolveDefaultsViaSearchPath(
+    document: vscode.TextDocument,
+    configPath: string
+  ): vscode.Location | undefined {
+    const text = document.getText();
+    const searchPaths = parseSearchPaths(text);
+    if (searchPaths.length === 0) return undefined;
+
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders) return undefined;
+
+    const normalized = configPath.replace(/^\//, "");
+
+    for (const sp of searchPaths) {
+      const dirs = this.resolveSearchPathDirs(
+        sp.scheme,
+        sp.path,
+        document.uri.fsPath,
+        workspaceFolders
+      );
+      for (const dir of dirs) {
+        for (const ext of [".yaml", ".yml"]) {
+          const candidate = path.join(dir, normalized + ext);
+          if (fs.existsSync(candidate)) {
+            return new vscode.Location(
+              vscode.Uri.file(candidate),
+              new vscode.Position(0, 0)
+            );
+          }
+        }
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Resolve a single searchpath entry to candidate directories on disk.
+   */
+  private resolveSearchPathDirs(
+    scheme: string,
+    spPath: string,
+    sourceFilePath: string,
+    workspaceFolders: readonly vscode.WorkspaceFolder[]
+  ): string[] {
+    const dirs: string[] = [];
+
+    if (scheme === "file") {
+      // Relative to workspace folder
+      const folder = vscode.workspace.getWorkspaceFolder(
+        vscode.Uri.file(sourceFilePath)
+      );
+      if (folder) {
+        const candidate = path.resolve(folder.uri.fsPath, spPath);
+        if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+          dirs.push(candidate);
+        }
+      }
+      // Walk up from source file's directory, trying to resolve at each level.
+      // This handles the common case where file://examples/hydra is relative to
+      // the project root (pyproject.toml location) which may differ from the
+      // VS Code workspace root.
+      let fileDir = path.dirname(sourceFilePath);
+      const fileVisited = new Set<string>();
+      while (fileDir && !fileVisited.has(fileDir)) {
+        fileVisited.add(fileDir);
+        const candidate = path.resolve(fileDir, spPath);
+        if (
+          fs.existsSync(candidate) &&
+          fs.statSync(candidate).isDirectory() &&
+          !dirs.includes(candidate)
+        ) {
+          dirs.push(candidate);
+        }
+        const parent = path.dirname(fileDir);
+        if (parent === fileDir) break;
+        fileDir = parent;
+      }
+    } else if (scheme === "pkg") {
+      // Search workspace folders for a directory with this name
+      for (const folder of workspaceFolders) {
+        const candidate = path.join(folder.uri.fsPath, spPath);
+        if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+          dirs.push(candidate);
+        }
+      }
+      // Also walk up from source file
+      let dir = path.dirname(sourceFilePath);
+      const visited = new Set<string>();
+      while (dir && !visited.has(dir)) {
+        visited.add(dir);
+        const candidate = path.join(dir, spPath);
+        if (
+          fs.existsSync(candidate) &&
+          fs.statSync(candidate).isDirectory() &&
+          !dirs.includes(candidate)
+        ) {
+          dirs.push(candidate);
+        }
+        const parent = path.dirname(dir);
+        if (parent === dir) break;
+        dir = parent;
+      }
+    }
+
+    return dirs;
   }
 
   private async resolveTargetValue(
