@@ -25,11 +25,30 @@ export class HydraConfigIndexer {
   private entries: ConfigEntry[] = [];
   private flatMaps: Map<string, YamlFlatMap> = new Map();
   private configRoots: string[] = [];
+  private indexPromise: Promise<void> | undefined;
+  private indexRequested = false;
 
   /**
    * Scan the workspace for Hydra config directories and index all YAML files.
    */
-  async indexWorkspace(): Promise<void> {
+  indexWorkspace(): Promise<void> {
+    this.indexRequested = true;
+    if (!this.indexPromise) {
+      this.indexPromise = this.runIndexLoop().finally(() => {
+        this.indexPromise = undefined;
+      });
+    }
+    return this.indexPromise;
+  }
+
+  private async runIndexLoop(): Promise<void> {
+    while (this.indexRequested) {
+      this.indexRequested = false;
+      await this.rebuildIndex();
+    }
+  }
+
+  private async rebuildIndex(): Promise<void> {
     this.entries = [];
     this.flatMaps.clear();
 
@@ -65,7 +84,7 @@ export class HydraConfigIndexer {
     const configDirNames = new Set(searchPaths);
     const yamlFiles = await vscode.workspace.findFiles(
       "**/*.{yaml,yml}",
-      "{**/node_modules/**,**/out/**,**/.vscode-test/**}"
+      "{**/.git/**,**/.nox/**,**/.tox/**,**/.venv/**,**/venv/**,**/env/**,**/__pycache__/**,**/node_modules/**,**/out/**,**/.vscode-test/**}"
     );
 
     const discoveredRoots = new Set<string>();

@@ -6,6 +6,8 @@ import { OmegaConfDiagnosticsProvider } from "./providers/diagnosticsProvider";
 
 let diagnosticsProvider: OmegaConfDiagnosticsProvider | undefined;
 
+const INDEX_DEBOUNCE_MS = 500;
+
 export function activate(context: vscode.ExtensionContext): void {
   const selector: vscode.DocumentSelector = [
     { language: "hydra-yaml", scheme: "file" },
@@ -15,14 +17,26 @@ export function activate(context: vscode.ExtensionContext): void {
   const configIndexer = new HydraConfigIndexer();
 
   // Index workspace on activation
-  configIndexer.indexWorkspace();
+  void configIndexer.indexWorkspace();
 
   // Re-index on config file changes
   const watcher = vscode.workspace.createFileSystemWatcher("**/*.{yaml,yml}");
-  watcher.onDidChange(() => configIndexer.indexWorkspace());
-  watcher.onDidCreate(() => configIndexer.indexWorkspace());
-  watcher.onDidDelete(() => configIndexer.indexWorkspace());
-  context.subscriptions.push(watcher);
+  let indexTimeout: NodeJS.Timeout | undefined;
+  const scheduleIndex = (): void => {
+    if (indexTimeout) clearTimeout(indexTimeout);
+    indexTimeout = setTimeout(() => {
+      indexTimeout = undefined;
+      void configIndexer.indexWorkspace();
+    }, INDEX_DEBOUNCE_MS);
+  };
+  watcher.onDidChange(scheduleIndex);
+  watcher.onDidCreate(scheduleIndex);
+  watcher.onDidDelete(scheduleIndex);
+  context.subscriptions.push(watcher, {
+    dispose: () => {
+      if (indexTimeout) clearTimeout(indexTimeout);
+    },
+  });
 
   // Register definition provider (goto-definition for Hydra compose)
   context.subscriptions.push(
