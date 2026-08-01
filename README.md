@@ -18,13 +18,18 @@ Enhanced YAML highlighting for Hydra-specific constructs:
 - **Built-in resolvers**: `oc.env`, `oc.decode`, `oc.select`, `now`, `hydra`, `python_version`, etc.
 - **Escaped interpolations**: `\${not.interpolated}`
 
-### Goto Definition
+### Go to and Peek Definition
 
-Jump to config file definitions from:
+Open config file definitions directly, or inspect and edit them inline with VS Code's
+**Peek Definition** command:
 
 - **Defaults list entries**: `- db: mysql` → opens `conf/db/mysql.yaml`
 - **`_target_` values**: `_target_: my_app.Trainer` → opens the Python source file
 - **Interpolation paths**: `${db.host}` → jumps to where `host` is defined
+
+Place the cursor on a defaults entry and run **Peek Definition** from the editor
+context menu or Command Palette. The standard **Go to Definition** and **Peek
+Definition** shortcuts work as well.
 
 ### Hover Information
 
