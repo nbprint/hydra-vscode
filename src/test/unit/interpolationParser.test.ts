@@ -131,9 +131,7 @@ suite("InterpolationParser", () => {
     });
 
     test("should parse interpolation embedded in string", () => {
-      const nodes = parseInterpolations(
-        'jdbc:mysql://${db.host}:${db.port}/${db.name}'
-      );
+      const nodes = parseInterpolations("jdbc:mysql://${db.host}:${db.port}/${db.name}");
       assert.strictEqual(nodes.length, 3);
       assert.strictEqual(nodes[0].text, "db.host");
       assert.strictEqual(nodes[1].text, "db.port");
@@ -286,13 +284,7 @@ suite("InterpolationParser", () => {
     });
 
     test("HYDRA_SPECIAL_KEYS should contain all instantiate keys", () => {
-      const expected = [
-        "_target_",
-        "_recursive_",
-        "_convert_",
-        "_partial_",
-        "_args_",
-      ];
+      const expected = ["_target_", "_recursive_", "_convert_", "_partial_", "_args_"];
       for (const k of expected) {
         assert.ok(k in HYDRA_SPECIAL_KEYS, `Missing key: ${k}`);
       }

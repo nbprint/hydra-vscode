@@ -52,11 +52,11 @@ Real-time error and warning highlighting:
 
 ## Configuration
 
-| Setting | Default | Description |
-|---------|---------|-------------|
+| Setting                   | Default                         | Description                                  |
+| ------------------------- | ------------------------------- | -------------------------------------------- |
 | `hydra.configSearchPaths` | `["conf", "config", "configs"]` | Directories to search for Hydra config files |
-| `hydra.enableDiagnostics` | `true` | Enable lint diagnostics for OmegaConf errors |
-| `hydra.enableHover` | `true` | Enable hover information for interpolations |
+| `hydra.enableDiagnostics` | `true`                          | Enable lint diagnostics for OmegaConf errors |
+| `hydra.enableHover`       | `true`                          | Enable hover information for interpolations  |
 
 ## Development
 

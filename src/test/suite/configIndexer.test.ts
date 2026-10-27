@@ -14,8 +14,8 @@ suite("HydraConfigIndexer", () => {
       indexedPaths.every(
         (filePath) =>
           !filePath.includes(`${path.sep}.venv${path.sep}`) &&
-          !filePath.includes(`${path.sep}.nox${path.sep}`)
-      )
+          !filePath.includes(`${path.sep}.nox${path.sep}`),
+      ),
     );
   });
 });

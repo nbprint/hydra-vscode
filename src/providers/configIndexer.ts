@@ -56,11 +56,7 @@ export class HydraConfigIndexer {
     if (!workspaceFolders) return;
 
     const config = vscode.workspace.getConfiguration("hydra");
-    const searchPaths = config.get<string[]>("configSearchPaths", [
-      "conf",
-      "config",
-      "configs",
-    ]);
+    const searchPaths = config.get<string[]>("configSearchPaths", ["conf", "config", "configs"]);
 
     this.configRoots = [];
 
@@ -84,7 +80,7 @@ export class HydraConfigIndexer {
     const configDirNames = new Set(searchPaths);
     const yamlFiles = await vscode.workspace.findFiles(
       "**/*.{yaml,yml}",
-      "{**/.git/**,**/.nox/**,**/.tox/**,**/.venv/**,**/venv/**,**/env/**,**/__pycache__/**,**/node_modules/**,**/out/**,**/.vscode-test/**}"
+      "{**/.git/**,**/.nox/**,**/.tox/**,**/.venv/**,**/venv/**,**/env/**,**/__pycache__/**,**/node_modules/**,**/out/**,**/.vscode-test/**}",
     );
 
     const discoveredRoots = new Set<string>();
@@ -113,9 +109,7 @@ export class HydraConfigIndexer {
 
     // 3. Index all YAML files under each config root
     for (const root of this.configRoots) {
-      const relativeFiles = yamlFiles.filter((f) =>
-        f.fsPath.startsWith(root + path.sep)
-      );
+      const relativeFiles = yamlFiles.filter((f) => f.fsPath.startsWith(root + path.sep));
 
       for (const fileUri of relativeFiles) {
         const relativePath = path.relative(root, fileUri.fsPath);
@@ -163,11 +157,7 @@ export class HydraConfigIndexer {
         const searchPaths = parseSearchPaths(text);
 
         for (const sp of searchPaths) {
-          const resolved = this.resolveSearchPathEntry(
-            sp,
-            fileUri.fsPath,
-            workspaceFolders
-          );
+          const resolved = this.resolveSearchPathEntry(sp, fileUri.fsPath, workspaceFolders);
           for (const dir of resolved) {
             if (!this.configRoots.includes(dir) && !additionalRoots.has(dir)) {
               additionalRoots.add(dir);
@@ -185,10 +175,7 @@ export class HydraConfigIndexer {
     for (const root of additionalRoots) {
       this.configRoots.push(root);
 
-      const pattern = new vscode.RelativePattern(
-        vscode.Uri.file(root),
-        "**/*.{yaml,yml}"
-      );
+      const pattern = new vscode.RelativePattern(vscode.Uri.file(root), "**/*.{yaml,yml}");
       const files = await vscode.workspace.findFiles(pattern);
 
       for (const fileUri of files) {
@@ -214,15 +201,13 @@ export class HydraConfigIndexer {
   private resolveSearchPathEntry(
     entry: SearchPathEntry,
     sourceFilePath: string,
-    workspaceFolders: readonly vscode.WorkspaceFolder[]
+    workspaceFolders: readonly vscode.WorkspaceFolder[],
   ): string[] {
     const results: string[] = [];
 
     if (entry.scheme === "file") {
       // file:// paths are relative to the workspace folder containing the source
-      const folder = vscode.workspace.getWorkspaceFolder(
-        vscode.Uri.file(sourceFilePath)
-      );
+      const folder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(sourceFilePath));
       if (folder) {
         const candidate = path.resolve(folder.uri.fsPath, entry.path);
         if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
@@ -292,8 +277,7 @@ export class HydraConfigIndexer {
       return (
         e.group === normalizedGroup ||
         e.group.startsWith(normalizedGroup + "/") ||
-        (normalizedGroup.includes("/") &&
-          normalizedGroup === `${e.group}/${e.option}`)
+        (normalizedGroup.includes("/") && normalizedGroup === `${e.group}/${e.option}`)
       );
     });
   }
@@ -309,21 +293,15 @@ export class HydraConfigIndexer {
     if (parts.length === 1) {
       // Could be a top-level config: group="" option="config"
       return (
-        this.entries.find(
-          (e) => e.group === "" && e.option === parts[0]
-        ) ||
-        this.entries.find(
-          (e) => e.group === parts[0] && e.option === parts[0]
-        )
+        this.entries.find((e) => e.group === "" && e.option === parts[0]) ||
+        this.entries.find((e) => e.group === parts[0] && e.option === parts[0])
       );
     }
 
     // group/option: group = all-but-last, option = last
     const option = parts[parts.length - 1];
     const group = parts.slice(0, -1).join("/");
-    return this.entries.find(
-      (e) => e.group === group && e.option === option
-    );
+    return this.entries.find((e) => e.group === group && e.option === option);
   }
 
   /**
@@ -335,9 +313,7 @@ export class HydraConfigIndexer {
     }
 
     try {
-      const content = await vscode.workspace.fs.readFile(
-        vscode.Uri.file(filePath)
-      );
+      const content = await vscode.workspace.fs.readFile(vscode.Uri.file(filePath));
       const text = Buffer.from(content).toString("utf-8");
       const flatMap = flattenYaml(text);
       this.flatMaps.set(filePath, flatMap);
@@ -352,7 +328,7 @@ export class HydraConfigIndexer {
    * Returns the first matching value found.
    */
   async resolveGlobalPath(
-    dotPath: string
+    dotPath: string,
   ): Promise<{ value: unknown; filePath: string; found: boolean }> {
     for (const entry of this.entries) {
       const flatMap = await this.getFlatMap(entry.filePath);
@@ -368,7 +344,7 @@ export class HydraConfigIndexer {
    */
   async resolveInDocument(
     uri: vscode.Uri,
-    dotPath: string
+    dotPath: string,
   ): Promise<{ value: unknown; found: boolean }> {
     const flatMap = await this.getFlatMap(uri.fsPath);
     if (dotPath in flatMap) {

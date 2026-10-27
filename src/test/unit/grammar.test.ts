@@ -17,7 +17,9 @@ function getGrammarPath(): string {
     if (typeof __dirname !== "undefined") {
       return path.resolve(__dirname, "../../../syntaxes/hydra-yaml.tmLanguage.json");
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   // ESM fallback: resolve from project root
   const root = process.cwd();
   return path.resolve(root, "syntaxes/hydra-yaml.tmLanguage.json");
@@ -51,17 +53,13 @@ suite("TextMate Grammar", () => {
   });
 
   test("should include comment pattern", () => {
-    const commentRef = grammar.patterns.find(
-      (p: any) => p.include === "#comment"
-    );
+    const commentRef = grammar.patterns.find((p: any) => p.include === "#comment");
     assert.ok(commentRef, "Should reference #comment pattern");
     assert.ok(grammar.repository.comment, "Should define comment in repository");
   });
 
   test("should include hydra-package-directive", () => {
-    const ref = grammar.patterns.find(
-      (p: any) => p.include === "#hydra-package-directive"
-    );
+    const ref = grammar.patterns.find((p: any) => p.include === "#hydra-package-directive");
     assert.ok(ref);
     const rule = grammar.repository["hydra-package-directive"];
     assert.ok(rule);
@@ -88,7 +86,7 @@ suite("TextMate Grammar", () => {
 
     // Should recognize OmegaConf resolvers
     const ocResolverPattern = rule.patterns.find((p: any) =>
-      p.name?.includes("resolver.omegaconf")
+      p.name?.includes("resolver.omegaconf"),
     );
     assert.ok(ocResolverPattern, "Should have OmegaConf resolver pattern");
     // The grammar uses escaped dots \\. in the regex
@@ -99,9 +97,7 @@ suite("TextMate Grammar", () => {
     assert.ok(ocResolverPattern.match.includes("dict"));
 
     // Should recognize Hydra resolvers
-    const hydraResolverPattern = rule.patterns.find((p: any) =>
-      p.name?.includes("resolver.hydra")
-    );
+    const hydraResolverPattern = rule.patterns.find((p: any) => p.name?.includes("resolver.hydra"));
     assert.ok(hydraResolverPattern, "Should have Hydra resolver pattern");
     assert.ok(hydraResolverPattern.match.includes("now"));
     assert.ok(hydraResolverPattern.match.includes("hydra"));
@@ -119,15 +115,12 @@ suite("TextMate Grammar", () => {
     assert.ok(rule);
 
     // Should have _self_ pattern
-    const selfPattern = rule.patterns.find((p: any) =>
-      p.name?.includes("self")
-    );
+    const selfPattern = rule.patterns.find((p: any) => p.name?.includes("self"));
     assert.ok(selfPattern, "Should have _self_ pattern");
 
     // Should have general defaults entry pattern with modifiers
-    const entryPattern = rule.patterns.find((p: any) =>
-      p.name?.includes("defaults-entry.hydra-yaml") &&
-      !p.name.includes("self")
+    const entryPattern = rule.patterns.find(
+      (p: any) => p.name?.includes("defaults-entry.hydra-yaml") && !p.name.includes("self"),
     );
     assert.ok(entryPattern, "Should have general defaults entry pattern");
 
@@ -136,7 +129,7 @@ suite("TextMate Grammar", () => {
     assert.ok(modifierCapture);
     assert.ok(
       modifierCapture.name.includes("keyword.control.modifier"),
-      "Should highlight optional/override as keyword"
+      "Should highlight optional/override as keyword",
     );
   });
 
@@ -164,16 +157,12 @@ suite("TextMate Grammar", () => {
     const rule = grammar.repository["constant"];
     assert.ok(rule);
 
-    const boolPattern = rule.patterns.find((p: any) =>
-      p.name?.includes("boolean")
-    );
+    const boolPattern = rule.patterns.find((p: any) => p.name?.includes("boolean"));
     assert.ok(boolPattern);
     assert.ok(boolPattern.match.includes("true"));
     assert.ok(boolPattern.match.includes("false"));
 
-    const nullPattern = rule.patterns.find((p: any) =>
-      p.name?.includes("null")
-    );
+    const nullPattern = rule.patterns.find((p: any) => p.name?.includes("null"));
     assert.ok(nullPattern);
     assert.ok(nullPattern.match.includes("null"));
   });
@@ -185,8 +174,8 @@ suite("TextMate Grammar", () => {
     assert.strictEqual(doubleQuoted.end, '"');
 
     // Double-quoted strings should support interpolation
-    const interpRef = doubleQuoted.patterns.find((p: any) =>
-      p.include === "#omegaconf-interpolation"
+    const interpRef = doubleQuoted.patterns.find(
+      (p: any) => p.include === "#omegaconf-interpolation",
     );
     assert.ok(interpRef, "Double-quoted strings should include interpolation");
 
@@ -202,14 +191,10 @@ suite("TextMate Grammar", () => {
     assert.ok(Array.isArray(rule.patterns));
 
     // Should have both mapping and sequence
-    const mappingPattern = rule.patterns.find((p: any) =>
-      p.name?.includes("flow-mapping")
-    );
+    const mappingPattern = rule.patterns.find((p: any) => p.name?.includes("flow-mapping"));
     assert.ok(mappingPattern);
 
-    const seqPattern = rule.patterns.find((p: any) =>
-      p.name?.includes("flow-sequence")
-    );
+    const seqPattern = rule.patterns.find((p: any) => p.name?.includes("flow-sequence"));
     assert.ok(seqPattern);
   });
 
@@ -217,24 +202,16 @@ suite("TextMate Grammar", () => {
     const rule = grammar.repository["numeric"];
     assert.ok(rule);
 
-    const intPattern = rule.patterns.find((p: any) =>
-      p.name?.includes("integer")
-    );
+    const intPattern = rule.patterns.find((p: any) => p.name?.includes("integer"));
     assert.ok(intPattern);
 
-    const floatPattern = rule.patterns.find((p: any) =>
-      p.name?.includes("float")
-    );
+    const floatPattern = rule.patterns.find((p: any) => p.name?.includes("float"));
     assert.ok(floatPattern);
 
-    const infPattern = rule.patterns.find((p: any) =>
-      p.name?.includes("inf")
-    );
+    const infPattern = rule.patterns.find((p: any) => p.name?.includes("inf"));
     assert.ok(infPattern);
 
-    const nanPattern = rule.patterns.find((p: any) =>
-      p.name?.includes("nan")
-    );
+    const nanPattern = rule.patterns.find((p: any) => p.name?.includes("nan"));
     assert.ok(nanPattern);
   });
 
@@ -275,10 +252,7 @@ suite("TextMate Grammar", () => {
     findIncludes(grammar.repository);
 
     for (const ref of allIncludes) {
-      assert.ok(
-        grammar.repository[ref],
-        `Referenced pattern #${ref} not found in repository`
-      );
+      assert.ok(grammar.repository[ref], `Referenced pattern #${ref} not found in repository`);
     }
   });
 });
