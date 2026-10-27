@@ -4,7 +4,8 @@ src
 node_modules
 .gitignore
 .github
-.eslintrc.cjs
+.oxlintrc.json
+.oxfmtrc.json
 .mocharc.json
 tsconfig.json
 esbuild.js
