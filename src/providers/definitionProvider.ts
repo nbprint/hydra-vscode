@@ -18,7 +18,7 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
   async provideDefinition(
     document: vscode.TextDocument,
     position: vscode.Position,
-    _token: vscode.CancellationToken
+    _token: vscode.CancellationToken,
   ): Promise<vscode.Definition | undefined> {
     const line = document.lineAt(position.line).text;
 
@@ -40,11 +40,11 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
   private resolveDefaultsEntry(
     document: vscode.TextDocument,
     position: vscode.Position,
-    line: string
+    line: string,
   ): vscode.Location | undefined {
     // Match defaults entry pattern:  - [optional|override] group/path: option
     const defaultsMatch = line.match(
-      /^\s*-\s+(?:optional\s+|override\s+)?(\/?\w[\w/]*)(?:@[\w_.]+)?(?:\s*:\s*(\S+))?\s*$/
+      /^\s*-\s+(?:optional\s+|override\s+)?(\/?\w[\w/]*)(?:@[\w_.]+)?(?:\s*:\s*(\S+))?\s*$/,
     );
     if (!defaultsMatch) return undefined;
 
@@ -91,7 +91,7 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
    */
   private resolveDefaultsRelativeToFile(
     document: vscode.TextDocument,
-    configPath: string
+    configPath: string,
   ): vscode.Location | undefined {
     const configRoot = this.findConfigRoot(document.uri.fsPath);
     if (!configRoot) return undefined;
@@ -122,7 +122,7 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
   private findConfigRoot(filePath: string): string | undefined {
     const config = vscode.workspace.getConfiguration("hydra");
     const searchPaths = new Set(
-      config.get<string[]>("configSearchPaths", ["conf", "config", "configs"])
+      config.get<string[]>("configSearchPaths", ["conf", "config", "configs"]),
     );
 
     let dir = path.dirname(filePath);
@@ -151,7 +151,7 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
    */
   private resolveDefaultsViaSearchPath(
     document: vscode.TextDocument,
-    configPath: string
+    configPath: string,
   ): vscode.Location | undefined {
     const text = document.getText();
     const searchPaths = parseSearchPaths(text);
@@ -167,16 +167,13 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
         sp.scheme,
         sp.path,
         document.uri.fsPath,
-        workspaceFolders
+        workspaceFolders,
       );
       for (const dir of dirs) {
         for (const ext of [".yaml", ".yml"]) {
           const candidate = path.join(dir, normalized + ext);
           if (fs.existsSync(candidate)) {
-            return new vscode.Location(
-              vscode.Uri.file(candidate),
-              new vscode.Position(0, 0)
-            );
+            return new vscode.Location(vscode.Uri.file(candidate), new vscode.Position(0, 0));
           }
         }
       }
@@ -192,15 +189,13 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
     scheme: string,
     spPath: string,
     sourceFilePath: string,
-    workspaceFolders: readonly vscode.WorkspaceFolder[]
+    workspaceFolders: readonly vscode.WorkspaceFolder[],
   ): string[] {
     const dirs: string[] = [];
 
     if (scheme === "file") {
       // Relative to workspace folder
-      const folder = vscode.workspace.getWorkspaceFolder(
-        vscode.Uri.file(sourceFilePath)
-      );
+      const folder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(sourceFilePath));
       if (folder) {
         const candidate = path.resolve(folder.uri.fsPath, spPath);
         if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
@@ -260,7 +255,7 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
   private async resolveTargetValue(
     document: vscode.TextDocument,
     position: vscode.Position,
-    line: string
+    line: string,
   ): Promise<vscode.Location[] | undefined> {
     // Match _target_: some.python.module.ClassName
     const targetMatch = line.match(/^\s*_target_\s*:\s*(\S+)/);
@@ -274,10 +269,7 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
     const modulePath = parts.slice(0, -1).join("/") + ".py";
     const className = parts[parts.length - 1];
 
-    const files = await vscode.workspace.findFiles(
-      `**/${modulePath}`,
-      "**/node_modules/**"
-    );
+    const files = await vscode.workspace.findFiles(`**/${modulePath}`, "**/node_modules/**");
 
     if (files.length > 0) {
       // Search for the class/function definition in the file
@@ -286,11 +278,7 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
       const lines = text.split("\n");
 
       for (let i = 0; i < lines.length; i++) {
-        if (
-          lines[i].match(
-            new RegExp(`^\\s*(class|def)\\s+${className}\\b`)
-          )
-        ) {
+        if (lines[i].match(new RegExp(`^\\s*(class|def)\\s+${className}\\b`))) {
           return [new vscode.Location(files[0], new vscode.Position(i, 0))];
         }
       }
@@ -305,7 +293,7 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
   private async resolveInterpolation(
     document: vscode.TextDocument,
     position: vscode.Position,
-    line: string
+    line: string,
   ): Promise<vscode.Location | undefined> {
     // Find ${...} at cursor position
     const interpolationRegex = /\$\{([^}]+)\}/g;
@@ -332,10 +320,7 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
           const pathParts = dotPath.split(".");
           const firstKey = pathParts[0];
           if (lines[i].match(new RegExp(`^\\s*${escapeRegExp(firstKey)}\\s*:`))) {
-            return new vscode.Location(
-              document.uri,
-              new vscode.Position(i, 0)
-            );
+            return new vscode.Location(document.uri, new vscode.Position(i, 0));
           }
         }
 
@@ -356,10 +341,7 @@ export class HydraDefinitionProvider implements vscode.DefinitionProvider {
   /**
    * Check whether the given line number is inside a `defaults:` block.
    */
-  private isInsideDefaultsBlock(
-    document: vscode.TextDocument,
-    lineNumber: number
-  ): boolean {
+  private isInsideDefaultsBlock(document: vscode.TextDocument, lineNumber: number): boolean {
     // Walk backwards from current line to find `defaults:`
     for (let i = lineNumber; i >= 0; i--) {
       const line = document.lineAt(i).text;

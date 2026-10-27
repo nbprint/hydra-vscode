@@ -24,7 +24,7 @@ export class OmegaConfHoverProvider implements vscode.HoverProvider {
   async provideHover(
     document: vscode.TextDocument,
     position: vscode.Position,
-    _token: vscode.CancellationToken
+    _token: vscode.CancellationToken,
   ): Promise<vscode.Hover | undefined> {
     const line = document.lineAt(position.line).text;
 
@@ -49,7 +49,7 @@ export class OmegaConfHoverProvider implements vscode.HoverProvider {
 
   private hoverPackageDirective(
     line: string,
-    _position: vscode.Position
+    _position: vscode.Position,
   ): vscode.Hover | undefined {
     const match = line.match(/^#\s*@package\s+(.*?)\s*$/);
     if (!match) return undefined;
@@ -57,16 +57,12 @@ export class OmegaConfHoverProvider implements vscode.HoverProvider {
     const pkgValue = match[1];
     const md = new vscode.MarkdownString();
     md.appendMarkdown("**Hydra @package Directive**\n\n");
-    md.appendMarkdown(
-      "Controls where this config is placed in the merged config tree.\n\n"
-    );
+    md.appendMarkdown("Controls where this config is placed in the merged config tree.\n\n");
 
     if (pkgValue === "_global_") {
       md.appendMarkdown("`_global_` — Merge at the root of the config tree.");
     } else if (pkgValue === "_group_") {
-      md.appendMarkdown(
-        "`_group_` — *(deprecated)* Merge at the config group path."
-      );
+      md.appendMarkdown("`_group_` — *(deprecated)* Merge at the config group path.");
     } else {
       md.appendMarkdown(`Package: \`${pkgValue}\``);
     }
@@ -74,10 +70,7 @@ export class OmegaConfHoverProvider implements vscode.HoverProvider {
     return new vscode.Hover(md);
   }
 
-  private hoverSpecialKey(
-    line: string,
-    position: vscode.Position
-  ): vscode.Hover | undefined {
+  private hoverSpecialKey(line: string, position: vscode.Position): vscode.Hover | undefined {
     for (const [key, description] of Object.entries(HYDRA_SPECIAL_KEYS)) {
       const idx = line.indexOf(key);
       if (idx >= 0 && position.character >= idx && position.character <= idx + key.length) {
@@ -86,38 +79,23 @@ export class OmegaConfHoverProvider implements vscode.HoverProvider {
         md.appendMarkdown(description);
         return new vscode.Hover(
           md,
-          new vscode.Range(
-            position.line,
-            idx,
-            position.line,
-            idx + key.length
-          )
+          new vscode.Range(position.line, idx, position.line, idx + key.length),
         );
       }
     }
     return undefined;
   }
 
-  private hoverMissingValue(
-    line: string,
-    position: vscode.Position
-  ): vscode.Hover | undefined {
+  private hoverMissingValue(line: string, position: vscode.Position): vscode.Hover | undefined {
     const idx = line.indexOf("???");
-    if (
-      idx >= 0 &&
-      position.character >= idx &&
-      position.character <= idx + 3
-    ) {
+    if (idx >= 0 && position.character >= idx && position.character <= idx + 3) {
       const md = new vscode.MarkdownString();
       md.appendMarkdown("**OmegaConf: MISSING value**\n\n");
       md.appendMarkdown(
         "This value is **mandatory** and must be provided before accessing.\n\n" +
-          "Set it via Hydra CLI override, e.g. `key=value`, or in a composing config."
+          "Set it via Hydra CLI override, e.g. `key=value`, or in a composing config.",
       );
-      return new vscode.Hover(
-        md,
-        new vscode.Range(position.line, idx, position.line, idx + 3)
-      );
+      return new vscode.Hover(md, new vscode.Range(position.line, idx, position.line, idx + 3));
     }
     return undefined;
   }
@@ -125,7 +103,7 @@ export class OmegaConfHoverProvider implements vscode.HoverProvider {
   private async hoverInterpolation(
     document: vscode.TextDocument,
     line: string,
-    position: vscode.Position
+    position: vscode.Position,
   ): Promise<vscode.Hover | undefined> {
     const nodes = parseInterpolations(line);
     const node = findInterpolationAt(nodes, position.character);
@@ -135,8 +113,7 @@ export class OmegaConfHoverProvider implements vscode.HoverProvider {
 
     if (node.kind === "resolver") {
       const resolverName = node.resolverName!;
-      const docs =
-        BUILTIN_RESOLVERS[resolverName] || HYDRA_RESOLVERS[resolverName];
+      const docs = BUILTIN_RESOLVERS[resolverName] || HYDRA_RESOLVERS[resolverName];
 
       md.appendMarkdown(`**OmegaConf Resolver: \`${resolverName}\`**\n\n`);
       if (docs) {
@@ -146,17 +123,12 @@ export class OmegaConfHoverProvider implements vscode.HoverProvider {
       }
 
       if (node.resolverArgs) {
-        md.appendCodeblock(
-          `\${${resolverName}:${node.resolverArgs}}`,
-          "yaml"
-        );
+        md.appendCodeblock(`\${${resolverName}:${node.resolverArgs}}`, "yaml");
       }
     } else {
       // Variable interpolation — try to resolve
       const dotPath = node.path.join(".");
-      md.appendMarkdown(
-        `**OmegaConf Interpolation: \`${node.text.trim()}\`**\n\n`
-      );
+      md.appendMarkdown(`**OmegaConf Interpolation: \`${node.text.trim()}\`**\n\n`);
 
       // Try to resolve in current document
       const docText = document.getText();
@@ -170,26 +142,17 @@ export class OmegaConfHoverProvider implements vscode.HoverProvider {
         // Try global resolution
         const result = await this.indexer.resolveGlobalPath(dotPath);
         if (result.found) {
-          md.appendMarkdown(
-            `**Resolved value:** \`${formatValue(result.value)}\`\n\n`
-          );
+          md.appendMarkdown(`**Resolved value:** \`${formatValue(result.value)}\`\n\n`);
           md.appendMarkdown(`*Source: ${result.filePath}*`);
         } else {
-          md.appendMarkdown(
-            `⚠ Could not resolve \`${dotPath}\` in any indexed config.`
-          );
+          md.appendMarkdown(`⚠ Could not resolve \`${dotPath}\` in any indexed config.`);
         }
       }
     }
 
     return new vscode.Hover(
       md,
-      new vscode.Range(
-        position.line,
-        node.start,
-        position.line,
-        node.end
-      )
+      new vscode.Range(position.line, node.start, position.line, node.end),
     );
   }
 }

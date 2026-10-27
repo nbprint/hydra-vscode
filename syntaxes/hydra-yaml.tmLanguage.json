@@ -63,10 +63,7 @@
         "2": { "name": "punctuation.separator.key-value.hydra-yaml" }
       },
       "end": "^(?=\\S(?!\\s*-))",
-      "patterns": [
-        { "include": "#comment" },
-        { "include": "#defaults-entry" }
-      ]
+      "patterns": [{ "include": "#comment" }, { "include": "#defaults-entry" }]
     },
     "defaults-entry": {
       "patterns": [
@@ -130,10 +127,7 @@
             "3": { "name": "punctuation.separator.key-value.hydra-yaml" }
           },
           "end": "$",
-          "patterns": [
-            { "include": "#comment" },
-            { "include": "#value" }
-          ]
+          "patterns": [{ "include": "#comment" }, { "include": "#value" }]
         },
         {
           "begin": "^(\\s*)(\"[^\"]*\"|'[^']*')(\\s*:\\s*)",
@@ -142,10 +136,7 @@
             "3": { "name": "punctuation.separator.key-value.hydra-yaml" }
           },
           "end": "$",
-          "patterns": [
-            { "include": "#comment" },
-            { "include": "#value" }
-          ]
+          "patterns": [{ "include": "#comment" }, { "include": "#value" }]
         }
       ]
     },
@@ -168,10 +159,7 @@
         "2": { "name": "punctuation.separator.key-value.hydra-yaml" }
       },
       "end": "$",
-      "patterns": [
-        { "include": "#comment" },
-        { "include": "#value" }
-      ]
+      "patterns": [{ "include": "#comment" }, { "include": "#value" }]
     },
     "value": {
       "patterns": [
@@ -204,9 +192,7 @@
           "endCaptures": {
             "1": { "name": "punctuation.definition.interpolation.end.hydra-yaml" }
           },
-          "patterns": [
-            { "include": "#interpolation-content" }
-          ]
+          "patterns": [{ "include": "#interpolation-content" }]
         }
       ]
     },
@@ -298,9 +284,7 @@
       "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.hydra-yaml" } },
       "end": "'",
       "endCaptures": { "0": { "name": "punctuation.definition.string.end.hydra-yaml" } },
-      "patterns": [
-        { "match": "''", "name": "constant.character.escape.hydra-yaml" }
-      ]
+      "patterns": [{ "match": "''", "name": "constant.character.escape.hydra-yaml" }]
     },
     "constant": {
       "patterns": [
@@ -343,9 +327,7 @@
       ]
     },
     "scalar": {
-      "patterns": [
-        { "include": "#value" }
-      ]
+      "patterns": [{ "include": "#value" }]
     }
   }
 }

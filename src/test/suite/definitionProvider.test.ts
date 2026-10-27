@@ -9,34 +9,26 @@ suite("HydraDefinitionProvider", () => {
     await extension.activate();
 
     const configUri = vscode.Uri.file(
-      path.resolve(__dirname, "../../../src/test/fixtures/workspace/conf/config.yaml")
+      path.resolve(__dirname, "../../../src/test/fixtures/workspace/conf/config.yaml"),
     );
     const document = await vscode.workspace.openTextDocument(configUri);
-    const defaultsLine = document.getText().split("\n").findIndex((line) =>
-      line.includes("db: mysql")
-    );
+    const defaultsLine = document
+      .getText()
+      .split("\n")
+      .findIndex((line) => line.includes("db: mysql"));
     assert.notStrictEqual(defaultsLine, -1);
 
     const definitions = await vscode.commands.executeCommand<
       (vscode.Location | vscode.LocationLink)[]
-    >(
-      "vscode.executeDefinitionProvider",
-      document.uri,
-      new vscode.Position(defaultsLine, 10)
-    );
+    >("vscode.executeDefinitionProvider", document.uri, new vscode.Position(defaultsLine, 10));
 
     assert.ok(definitions);
     assert.strictEqual(definitions.length, 1);
     const targetUri =
-      definitions[0] instanceof vscode.Location
-        ? definitions[0].uri
-        : definitions[0].targetUri;
+      definitions[0] instanceof vscode.Location ? definitions[0].uri : definitions[0].targetUri;
     assert.strictEqual(
       targetUri.fsPath,
-      path.resolve(
-        __dirname,
-        "../../../src/test/fixtures/workspace/conf/db/mysql.yaml"
-      )
+      path.resolve(__dirname, "../../../src/test/fixtures/workspace/conf/db/mysql.yaml"),
     );
   });
 });

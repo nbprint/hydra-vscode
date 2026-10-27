@@ -42,18 +42,15 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.languages.registerDefinitionProvider(
       selector,
-      new HydraDefinitionProvider(configIndexer)
-    )
+      new HydraDefinitionProvider(configIndexer),
+    ),
   );
 
   // Register hover provider (OmegaConf interpolation hover)
   const config = vscode.workspace.getConfiguration("hydra");
   if (config.get<boolean>("enableHover", true)) {
     context.subscriptions.push(
-      vscode.languages.registerHoverProvider(
-        selector,
-        new OmegaConfHoverProvider(configIndexer)
-      )
+      vscode.languages.registerHoverProvider(selector, new OmegaConfHoverProvider(configIndexer)),
     );
   }
 

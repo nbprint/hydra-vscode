@@ -158,7 +158,7 @@ export function splitPath(path: string): string[] {
  */
 export function findInterpolationAt(
   nodes: InterpolationNode[],
-  offset: number
+  offset: number,
 ): InterpolationNode | null {
   for (const node of nodes) {
     if (offset >= node.start && offset < node.end) {
@@ -185,7 +185,8 @@ export const BUILTIN_RESOLVERS: Record<string, string> = {
   "oc.env": "Read an environment variable. Usage: ${oc.env:VAR_NAME[,default]}",
   "oc.decode": "Decode a string as an OmegaConf value. Usage: ${oc.decode:value}",
   "oc.create": "Create a sub-config from a literal. Usage: ${oc.create:{a: 1}}",
-  "oc.deprecated": "Redirect to a new key with deprecation warning. Usage: ${oc.deprecated:new.key}",
+  "oc.deprecated":
+    "Redirect to a new key with deprecation warning. Usage: ${oc.deprecated:new.key}",
   "oc.select": "Select a value with optional default. Usage: ${oc.select:key[,default]}",
   "oc.dict.keys": "Get dictionary keys as list. Usage: ${oc.dict.keys:dict_key}",
   "oc.dict.values": "Get dictionary values as list. Usage: ${oc.dict.values:dict_key}",
@@ -197,8 +198,7 @@ export const BUILTIN_RESOLVERS: Record<string, string> = {
 export const HYDRA_RESOLVERS: Record<string, string> = {
   now: "Current datetime. Usage: ${now:%Y-%m-%d_%H-%M-%S}",
   hydra: "Access Hydra runtime config. Usage: ${hydra.job.name}",
-  python_version:
-    "Python version string. Usage: ${python_version:major|minor|micro}",
+  python_version: "Python version string. Usage: ${python_version:major|minor|micro}",
 };
 
 /**

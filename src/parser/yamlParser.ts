@@ -134,7 +134,7 @@ export function parseDefaultsList(text: string): DefaultsEntry[] {
 
       // Match defaults entry patterns
       const entryMatch = line.match(
-        /^\s*-\s+(optional\s+|override\s+)?(\/?\w[\w/]*)(?:@([\w_.]+))?(?:\s*:\s*(.+?))?\s*$/
+        /^\s*-\s+(optional\s+|override\s+)?(\/?\w[\w/]*)(?:@([\w_.]+))?(?:\s*:\s*(.+?))?\s*$/,
       );
       if (entryMatch) {
         const modifier = entryMatch[1]?.trim();
@@ -164,7 +164,7 @@ export function parseDefaultsList(text: string): DefaultsEntry[] {
  */
 export function resolvePathInFlatMap(
   flatMap: YamlFlatMap,
-  path: string[]
+  path: string[],
 ): { value: unknown; found: boolean } {
   const dotPath = path.join(".");
   if (dotPath in flatMap) {
@@ -207,9 +207,7 @@ export function parseSearchPaths(text: string): SearchPathEntry[] {
 
       if (!YAML.isMap(item.value)) continue;
       for (const hydraItem of item.value.items) {
-        const hKey = YAML.isScalar(hydraItem.key)
-          ? String(hydraItem.key.value)
-          : "";
+        const hKey = YAML.isScalar(hydraItem.key) ? String(hydraItem.key.value) : "";
         if (hKey !== "searchpath") continue;
 
         if (!YAML.isSeq(hydraItem.value)) continue;

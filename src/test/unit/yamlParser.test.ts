@@ -262,8 +262,7 @@ suite("YamlParser", () => {
 
   suite("parseSearchPaths", () => {
     test("should parse file:// searchpath entries", () => {
-      const yaml =
-        "hydra:\n  searchpath:\n    - file://examples/hydra";
+      const yaml = "hydra:\n  searchpath:\n    - file://examples/hydra";
       const result = parseSearchPaths(yaml);
       assert.strictEqual(result.length, 1);
       assert.strictEqual(result[0].scheme, "file");
@@ -271,8 +270,7 @@ suite("YamlParser", () => {
     });
 
     test("should parse pkg:// searchpath entries", () => {
-      const yaml =
-        "hydra:\n  searchpath:\n    - pkg://additional_conf";
+      const yaml = "hydra:\n  searchpath:\n    - pkg://additional_conf";
       const result = parseSearchPaths(yaml);
       assert.strictEqual(result.length, 1);
       assert.strictEqual(result[0].scheme, "pkg");
@@ -299,8 +297,7 @@ suite("YamlParser", () => {
     });
 
     test("should handle flow-style list", () => {
-      const yaml =
-        "hydra:\n  searchpath: [file://examples/hydra]";
+      const yaml = "hydra:\n  searchpath: [file://examples/hydra]";
       const result = parseSearchPaths(yaml);
       assert.strictEqual(result.length, 1);
       assert.strictEqual(result[0].scheme, "file");
@@ -308,8 +305,7 @@ suite("YamlParser", () => {
     });
 
     test("should ignore entries without recognized scheme", () => {
-      const yaml =
-        "hydra:\n  searchpath:\n    - http://example.com\n    - file://valid/path";
+      const yaml = "hydra:\n  searchpath:\n    - http://example.com\n    - file://valid/path";
       const result = parseSearchPaths(yaml);
       assert.strictEqual(result.length, 1);
       assert.strictEqual(result[0].scheme, "file");

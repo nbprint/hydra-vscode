@@ -21,8 +21,7 @@ export class OmegaConfDiagnosticsProvider implements vscode.Disposable {
   private disposables: vscode.Disposable[] = [];
 
   constructor(private indexer: HydraConfigIndexer) {
-    this.diagnosticCollection =
-      vscode.languages.createDiagnosticCollection("hydra-omegaconf");
+    this.diagnosticCollection = vscode.languages.createDiagnosticCollection("hydra-omegaconf");
   }
 
   dispose(): void {
@@ -42,21 +41,21 @@ export class OmegaConfDiagnosticsProvider implements vscode.Disposable {
         if (editor) {
           this.analyzeDocument(editor.document);
         }
-      })
+      }),
     );
 
     // Analyze on document change
     this.disposables.push(
       vscode.workspace.onDidChangeTextDocument((e) => {
         this.analyzeDocument(e.document);
-      })
+      }),
     );
 
     // Clear diagnostics when document is closed
     this.disposables.push(
       vscode.workspace.onDidCloseTextDocument((doc) => {
         this.diagnosticCollection.delete(doc.uri);
-      })
+      }),
     );
   }
 
@@ -80,13 +79,7 @@ export class OmegaConfDiagnosticsProvider implements vscode.Disposable {
       this.checkMissingValues(line, i, diagnostics);
 
       // Parse and validate interpolation references
-      await this.checkInterpolationReferences(
-        line,
-        i,
-        flatMap,
-        document,
-        diagnostics
-      );
+      await this.checkInterpolationReferences(line, i, flatMap, document, diagnostics);
     }
 
     this.diagnosticCollection.set(document.uri, diagnostics);
@@ -104,7 +97,7 @@ export class OmegaConfDiagnosticsProvider implements vscode.Disposable {
   private checkUnclosedInterpolations(
     line: string,
     lineNumber: number,
-    diagnostics: vscode.Diagnostic[]
+    diagnostics: vscode.Diagnostic[],
   ): void {
     let depth = 0;
     let lastOpen = -1;
@@ -126,18 +119,13 @@ export class OmegaConfDiagnosticsProvider implements vscode.Disposable {
     }
 
     if (depth > 0 && lastOpen >= 0) {
-      const range = new vscode.Range(
-        lineNumber,
-        lastOpen,
-        lineNumber,
-        line.length
-      );
+      const range = new vscode.Range(lineNumber, lastOpen, lineNumber, line.length);
       diagnostics.push(
         new vscode.Diagnostic(
           range,
           "Unclosed OmegaConf interpolation: missing closing '}'",
-          vscode.DiagnosticSeverity.Error
-        )
+          vscode.DiagnosticSeverity.Error,
+        ),
       );
     }
   }
@@ -145,7 +133,7 @@ export class OmegaConfDiagnosticsProvider implements vscode.Disposable {
   private checkMissingValues(
     line: string,
     lineNumber: number,
-    diagnostics: vscode.Diagnostic[]
+    diagnostics: vscode.Diagnostic[],
   ): void {
     // Match ??? as a value (after colon)
     const match = line.match(/:\s*(\?\?\?)\s*(?:#.*)?$/);
@@ -157,8 +145,8 @@ export class OmegaConfDiagnosticsProvider implements vscode.Disposable {
           new vscode.Diagnostic(
             range,
             "OmegaConf MISSING value: must be set before access.",
-            vscode.DiagnosticSeverity.Warning
-          )
+            vscode.DiagnosticSeverity.Warning,
+          ),
         );
       }
     }
@@ -169,7 +157,7 @@ export class OmegaConfDiagnosticsProvider implements vscode.Disposable {
     lineNumber: number,
     flatMap: Record<string, unknown>,
     document: vscode.TextDocument,
-    diagnostics: vscode.Diagnostic[]
+    diagnostics: vscode.Diagnostic[],
   ): Promise<void> {
     const nodes = parseInterpolations(line);
 
@@ -194,18 +182,13 @@ export class OmegaConfDiagnosticsProvider implements vscode.Disposable {
         if (result.found) continue;
 
         // Report as info diagnostic (might be resolved at runtime)
-        const range = new vscode.Range(
-          lineNumber,
-          node.start,
-          lineNumber,
-          node.end
-        );
+        const range = new vscode.Range(lineNumber, node.start, lineNumber, node.end);
         diagnostics.push(
           new vscode.Diagnostic(
             range,
             `Cannot resolve interpolation '\${${dotPath}}' in indexed configs. It may be provided at runtime.`,
-            vscode.DiagnosticSeverity.Information
-          )
+            vscode.DiagnosticSeverity.Information,
+          ),
         );
       }
 
@@ -217,18 +200,13 @@ export class OmegaConfDiagnosticsProvider implements vscode.Disposable {
         if (resolverName in HYDRA_RESOLVERS) continue;
 
         // Custom resolver — just informational hint
-        const range = new vscode.Range(
-          lineNumber,
-          node.start,
-          lineNumber,
-          node.end
-        );
+        const range = new vscode.Range(lineNumber, node.start, lineNumber, node.end);
         diagnostics.push(
           new vscode.Diagnostic(
             range,
             `'${resolverName}' is not a built-in OmegaConf/Hydra resolver. Ensure it is registered at runtime.`,
-            vscode.DiagnosticSeverity.Hint
-          )
+            vscode.DiagnosticSeverity.Hint,
+          ),
         );
       }
     }
